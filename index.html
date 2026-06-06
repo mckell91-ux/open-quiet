@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Leave It Here | leaveithere.org</title>
     <meta name="description" content="Leave It Here is a quiet anonymous place for what you can’t carry alone. No names, accounts, likes, or followers.">
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="styles.css?v=12">
   </head>
   <body>
     <a class="skip-link" href="#write">Skip to writing</a>
@@ -15,7 +15,13 @@
         <span class="mark" aria-hidden="true"></span>
         <span>Leave It Here</span>
       </a>
-      <nav class="nav-links desktop-nav" aria-label="Main navigation">
+      <button class="hamburger-button" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primaryNav">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+      <nav class="nav-links" id="primaryNav" aria-label="Main navigation">
+        <a href="#write">Write</a>
         <a href="#about">About</a>
         <a href="#feed">Shared feelings</a>
         <a href="#archive">Archive</a>
@@ -24,23 +30,6 @@
         <a href="privacy.html">Privacy</a>
         <a href="guidelines.html">Guidelines</a>
       </nav>
-      <div class="mobile-menu">
-        <button class="hamburger-button" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNav">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </button>
-        <nav class="nav-links mobile-nav-links" id="mobileNav" aria-label="Mobile navigation">
-          <a href="#write">Write</a>
-          <a href="#feed">Shared feelings</a>
-          <a href="#archive">Archive</a>
-          <a href="#letters">Letters</a>
-          <a href="#capsule">Time capsule</a>
-          <a href="#about">About</a>
-          <a href="privacy.html">Privacy</a>
-          <a href="guidelines.html">Guidelines</a>
-        </nav>
-      </div>
     </header>
 
     <main>
@@ -196,7 +185,7 @@
       </article>
     </template>
 
-    <script src="nav.js?v=11"></script>
-    <script src="app.js?v=11"></script>
+    <script src="nav.js?v=12"></script>
+    <script src="app.js?v=12"></script>
   </body>
 </html>

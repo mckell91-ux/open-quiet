@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Privacy | Leave It Here</title>
     <meta name="description" content="Privacy information for Leave It Here, a quiet anonymous place at leaveithere.org.">
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="styles.css?v=12">
   </head>
   <body>
     <header class="site-header">
@@ -13,7 +13,13 @@
         <span class="mark" aria-hidden="true"></span>
         <span>Leave It Here</span>
       </a>
-      <nav class="nav-links desktop-nav" aria-label="Main navigation">
+      <button class="hamburger-button" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primaryNav">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+      <nav class="nav-links" id="primaryNav" aria-label="Main navigation">
+        <a href="index.html">Write</a>
         <a href="index.html#about">About</a>
         <a href="index.html#feed">Shared feelings</a>
         <a href="index.html#letters">Letters</a>
@@ -21,20 +27,6 @@
         <a href="privacy.html">Privacy</a>
         <a href="guidelines.html">Guidelines</a>
       </nav>
-      <div class="mobile-menu">
-        <button class="hamburger-button" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNav">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </button>
-        <nav class="nav-links mobile-nav-links" id="mobileNav" aria-label="Mobile navigation">
-          <a href="index.html">Write</a>
-          <a href="index.html#feed">Shared feelings</a>
-          <a href="index.html#letters">Letters</a>
-          <a href="privacy.html">Privacy</a>
-          <a href="guidelines.html">Guidelines</a>
-        </nav>
-      </div>
     </header>
 
     <aside class="crisis-box" aria-label="Crisis support">
@@ -57,6 +49,6 @@
         <a class="quiet-link" href="index.html">Return to Leave It Here</a>
       </section>
     </main>
-    <script src="nav.js?v=11"></script>
+    <script src="nav.js?v=12"></script>
   </body>
 </html>
