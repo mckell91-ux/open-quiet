@@ -111,7 +111,7 @@ const quietStore = {
     requireSupabase();
 
     const { error } = await supabaseClient.rpc("report_feeling", {
-      feeling_id: id,
+      target_feeling_id: id,
       client_token: sessionClientToken
     });
 
@@ -128,8 +128,8 @@ const quietStore = {
     requireSupabase();
 
     const { error } = await supabaseClient.rpc("send_comfort", {
-      feeling_id: event.postId,
-      comfort_phrase: event.phrase,
+      target_feeling_id: event.postId,
+      selected_comfort_phrase: event.phrase,
       client_token: sessionClientToken
     });
 

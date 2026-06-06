@@ -105,7 +105,7 @@ end;
 $$;
 
 create or replace function public.report_feeling(
-  feeling_id uuid,
+  target_feeling_id uuid,
   client_token text
 )
 returns void
@@ -122,23 +122,23 @@ begin
 
   with inserted as (
     insert into public.feeling_actions (feeling_id, action_type, client_token_hash)
-    values (feeling_id, 'report', token_hash)
+    values (target_feeling_id, 'report', token_hash)
     on conflict do nothing
-    returning feeling_id
+    returning public.feeling_actions.feeling_id
   )
   update public.feelings
   set
-    reported_count = reported_count + 1,
+    reported_count = public.feelings.reported_count + 1,
     -- Auto-hide public posts after 3 unique reports.
-    hidden = case when reported_count + 1 >= 3 then true else hidden end
-  where id = feeling_id
+    hidden = case when public.feelings.reported_count + 1 >= 3 then true else public.feelings.hidden end
+  where public.feelings.id = target_feeling_id
     and exists (select 1 from inserted);
 end;
 $$;
 
 create or replace function public.send_comfort(
-  feeling_id uuid,
-  comfort_phrase text,
+  target_feeling_id uuid,
+  selected_comfort_phrase text,
   client_token text
 )
 returns void
@@ -149,7 +149,7 @@ as $$
 declare
   token_hash text := public.hash_client_token(client_token);
 begin
-  if comfort_phrase not in ('You''re not alone.', 'I hear you.', 'That sounds heavy.') then
+  if selected_comfort_phrase not in ('You''re not alone.', 'I hear you.', 'That sounds heavy.') then
     raise exception 'Please choose one of the available comfort messages.';
   end if;
 
@@ -159,13 +159,13 @@ begin
 
   with inserted as (
     insert into public.feeling_actions (feeling_id, action_type, comfort_phrase, client_token_hash)
-    values (feeling_id, 'comfort', comfort_phrase, token_hash)
+    values (target_feeling_id, 'comfort', selected_comfort_phrase, token_hash)
     on conflict do nothing
-    returning feeling_id
+    returning public.feeling_actions.feeling_id
   )
   update public.feelings
-  set comfort_count = comfort_count + 1
-  where id = feeling_id
+  set comfort_count = public.feelings.comfort_count + 1
+  where public.feelings.id = target_feeling_id
     and exists (select 1 from inserted);
 end;
 $$;
