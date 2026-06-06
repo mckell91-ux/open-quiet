@@ -5,6 +5,7 @@ const charCount = document.querySelector("#charCount");
 const clearButton = document.querySelector("#clearButton");
 const messageWell = document.querySelector("#messageWell");
 const feedList = document.querySelector("#feedList");
+const randomFeelingButton = document.querySelector("#randomFeelingButton");
 const postTemplate = document.querySelector("#postTemplate");
 const archiveCard = document.querySelector("#archiveCard");
 const shuffleArchive = document.querySelector("#shuffleArchive");
@@ -40,6 +41,8 @@ const writingPrompts = [
   "What are you grieving?",
   "What are you hopeful about?"
 ];
+let currentPromptIndex = -1;
+let visiblePostElements = [];
 
 const supabaseConfig = window.LEAVE_IT_HERE_SUPABASE || {};
 const isSupabaseConfigured = Boolean(
@@ -243,9 +246,20 @@ function updateCount() {
 }
 
 function setRandomPrompt() {
-  const prompt = writingPrompts[Math.floor(Math.random() * writingPrompts.length)];
+  let nextIndex = Math.floor(Math.random() * writingPrompts.length);
+  if (writingPrompts.length > 1 && nextIndex === currentPromptIndex) {
+    nextIndex = (nextIndex + 1) % writingPrompts.length;
+  }
+  currentPromptIndex = nextIndex;
+  const prompt = writingPrompts[currentPromptIndex];
   textarea.placeholder = prompt;
   selectedPrompt.textContent = prompt;
+}
+
+function rotatePromptIfEmpty() {
+  if (!textarea.value.trim()) {
+    setRandomPrompt();
+  }
 }
 
 function showReleaseMessage(text, mode) {
@@ -290,6 +304,7 @@ async function renderFeed() {
   const visiblePosts = filter === "all" ? posts : posts.filter((post) => post.mood === filter);
 
   feedList.innerHTML = "";
+  visiblePostElements = [];
 
   if (!visiblePosts.length) {
     const empty = document.createElement("p");
@@ -312,6 +327,7 @@ async function renderFeed() {
     node.querySelector("p").textContent = isReported
       ? "This post has been reported on this device."
       : post.text;
+    node.querySelector(".comfort-count").textContent = `${post.comfortCount} comfort${post.comfortCount === 1 ? "" : "s"}`;
 
     const reportButton = node.querySelector(".report-button");
     reportButton.textContent = isReported ? "Reported" : "Report";
@@ -365,7 +381,24 @@ async function renderFeed() {
     });
 
     feedList.append(node);
+    visiblePostElements.push(node);
   });
+}
+
+function jumpToRandomFeeling() {
+  if (!visiblePostElements.length) {
+    showFeedError("No visible feelings are available for this filter yet.");
+    return;
+  }
+
+  visiblePostElements.forEach((node) => node.classList.remove("is-random-target"));
+  const target = visiblePostElements[Math.floor(Math.random() * visiblePostElements.length)];
+  target.classList.add("is-random-target");
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  window.setTimeout(() => {
+    target.classList.remove("is-random-target");
+  }, 2600);
 }
 
 async function renderArchive() {
@@ -612,6 +645,7 @@ document.querySelectorAll("input[name='filter']").forEach((input) => {
   input.addEventListener("change", renderFeed);
 });
 
+randomFeelingButton.addEventListener("click", jumpToRandomFeeling);
 shuffleArchive.addEventListener("click", renderArchive);
 
 letterForm.addEventListener("submit", async (event) => {
@@ -661,8 +695,10 @@ capsuleForm.addEventListener("submit", async (event) => {
 });
 
 textarea.addEventListener("input", updateCount);
+textarea.addEventListener("focus", rotatePromptIfEmpty);
 
 setRandomPrompt();
+window.setInterval(rotatePromptIfEmpty, 8000);
 updateCount();
 renderFeed();
 renderArchive();

@@ -391,7 +391,8 @@ textarea:focus {
 .secondary-button,
 .ghost-button,
 .report-button,
-.image-share-button {
+.image-share-button,
+.random-feeling-button {
   padding: 0 16px;
 }
 
@@ -409,7 +410,8 @@ textarea:focus {
 
 .ghost-button,
 .report-button,
-.image-share-button {
+.image-share-button,
+.random-feeling-button {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.1);
 }
@@ -497,6 +499,31 @@ textarea:focus {
   margin: 0;
   color: var(--muted);
   line-height: 1.52;
+}
+
+.post-stats {
+  margin-top: 16px;
+  color: var(--quiet);
+  font-size: 0.86rem;
+}
+
+.comfort-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.random-feeling-button {
+  margin-top: 18px;
+}
+
+.post-card.is-random-target {
+  border-color: rgba(116, 215, 196, 0.62);
+  box-shadow: 0 0 0 4px rgba(116, 215, 196, 0.12);
 }
 
 .image-share-button {

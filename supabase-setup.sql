@@ -104,6 +104,8 @@ begin
 end;
 $$;
 
+drop function if exists public.report_feeling(uuid, text);
+
 create or replace function public.report_feeling(
   target_feeling_id uuid,
   client_token text

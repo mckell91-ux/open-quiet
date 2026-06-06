@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Leave It Here | leaveithere.org</title>
     <meta name="description" content="Leave It Here is a quiet anonymous place for what you can’t carry alone. No names, accounts, likes, or followers.">
-    <link rel="stylesheet" href="styles.css?v=17">
+    <link rel="stylesheet" href="styles.css?v=19">
   </head>
   <body>
     <a class="skip-link" href="#write">Skip to writing</a>
@@ -107,6 +107,7 @@
           <label><input type="radio" name="filter" value="hopeful"><span>Hopeful</span></label>
         </fieldset>
 
+        <button class="random-feeling-button" type="button" id="randomFeelingButton">Random Feeling</button>
         <div class="feed-list" id="feedList" aria-live="polite"></div>
       </section>
 
@@ -177,6 +178,9 @@
           <button type="button" class="report-button">Report</button>
         </header>
         <p></p>
+        <div class="post-stats">
+          <span class="comfort-count"></span>
+        </div>
         <button type="button" class="image-share-button">Share this feeling as an image</button>
         <div class="comfort-row" aria-label="Send comfort"></div>
       </article>
@@ -191,7 +195,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=4"></script>
-    <script src="nav.js?v=18"></script>
-    <script src="app.js?v=18"></script>
+    <script src="nav.js?v=19"></script>
+    <script src="app.js?v=19"></script>
   </body>
 </html>
