@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Open Quiet</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="release-panel" aria-labelledby="site-title">
+        <div class="brand-row">
+          <div class="mark" aria-hidden="true"></div>
+          <p>Open Quiet</p>
+        </div>
+
+        <div class="copy-block">
+          <h1 id="site-title">Let it out here.</h1>
+          <p class="subhead">No names. No accounts. Just a soft place to put the thing you have been carrying.</p>
+        </div>
+
+        <form class="feeling-form" id="feelingForm">
+          <label for="feelingText">What do you need to say?</label>
+          <textarea id="feelingText" name="feelingText" maxlength="700" placeholder="Type the feeling exactly as it is..." required></textarea>
+
+          <div class="meta-row">
+            <fieldset class="mood-group" aria-label="Feeling">
+              <legend>Feeling</legend>
+              <label><input type="radio" name="mood" value="heavy" checked><span>Heavy</span></label>
+              <label><input type="radio" name="mood" value="angry"><span>Angry</span></label>
+              <label><input type="radio" name="mood" value="lonely"><span>Lonely</span></label>
+              <label><input type="radio" name="mood" value="hopeful"><span>Hopeful</span></label>
+            </fieldset>
+
+            <div class="counter" aria-live="polite">
+              <span id="charCount">0</span><span>/700</span>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="primary-button" type="submit">Release it</button>
+            <button class="ghost-button" type="button" id="clearButton">Clear</button>
+          </div>
+        </form>
+
+        <p class="care-note">If you might hurt yourself or someone else, call or text <a href="https://988lifeline.org/" target="_blank" rel="noreferrer">988</a> now. You deserve immediate human backup.</p>
+      </section>
+
+      <section class="echo-panel" aria-labelledby="echo-title">
+        <div class="breath-orb" aria-hidden="true">
+          <span></span>
+        </div>
+        <div>
+          <p class="eyebrow">After release</p>
+          <h2 id="echo-title">Your words can disappear, or stay only on this device.</h2>
+        </div>
+        <div class="toggle-row">
+          <label class="switch">
+            <input type="checkbox" id="saveToggle" checked>
+            <span></span>
+          </label>
+          <p>Keep a private local trail</p>
+        </div>
+
+        <div class="message-well" id="messageWell" aria-live="polite">
+          <p>When you release something, it will pass through here and fade.</p>
+        </div>
+
+        <div class="trail-header">
+          <h3>Private trail</h3>
+          <button type="button" class="text-button" id="wipeTrail">Wipe trail</button>
+        </div>
+        <div class="trail-list" id="trailList"></div>
+      </section>
+    </main>
+
+    <template id="trailItemTemplate">
+      <article class="trail-item">
+        <div>
+          <span class="mood-dot"></span>
+          <strong></strong>
+        </div>
+        <p></p>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
