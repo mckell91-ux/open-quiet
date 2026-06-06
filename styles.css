@@ -156,7 +156,7 @@ h3 {
   display: none;
 }
 
-.mobile-menu summary {
+.hamburger-button {
   width: 42px;
   height: 38px;
   display: grid;
@@ -168,10 +168,9 @@ h3 {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  list-style: none;
 }
 
-.mobile-menu summary span {
+.hamburger-button span {
   width: 18px;
   height: 2px;
   display: block;
@@ -179,11 +178,7 @@ h3 {
   background: var(--ink);
 }
 
-.mobile-menu summary::-webkit-details-marker {
-  display: none;
-}
-
-.mobile-menu[open] summary {
+.mobile-menu.open .hamburger-button {
   border-color: rgba(116, 215, 196, 0.55);
 }
 
@@ -771,12 +766,12 @@ select {
   }
 
   .brand-row {
-    max-width: calc(100% - 58px);
+    max-width: calc(100% - 56px);
+    white-space: nowrap;
   }
 
   .brand-row span:last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: clamp(1rem, 5.1vw, 1.2rem);
     white-space: nowrap;
   }
 
@@ -787,7 +782,11 @@ select {
     flex: 0 0 auto;
   }
 
-  .mobile-menu nav {
+  .mobile-nav-links {
+    display: none;
+  }
+
+  .mobile-menu.open .mobile-nav-links {
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
@@ -804,7 +803,7 @@ select {
     backdrop-filter: blur(16px);
   }
 
-  .mobile-menu nav a {
+  .mobile-nav-links a {
     min-height: 38px;
     display: grid;
     place-items: center;
@@ -1067,7 +1066,7 @@ select {
   }
 
   .brand-row span:last-child {
-    font-size: 0.95rem;
+    font-size: clamp(0.98rem, 5vw, 1.12rem);
   }
 
   .mark {
