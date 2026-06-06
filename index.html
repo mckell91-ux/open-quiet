@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Leave It Here | leaveithere.org</title>
     <meta name="description" content="Leave It Here is a quiet anonymous place for what you can’t carry alone. No names, accounts, likes, or followers.">
-    <link rel="stylesheet" href="styles.css?v=16">
+    <link rel="stylesheet" href="styles.css?v=17">
   </head>
   <body>
     <a class="skip-link" href="#write">Skip to writing</a>
@@ -43,6 +43,10 @@
         <section class="write-panel" aria-label="Write a feeling">
           <form class="feeling-form" id="feelingForm">
             <label for="feelingText">What do you need to say?</label>
+            <div class="prompt-hint" aria-live="polite">
+              <span>Need a starting point?</span>
+              <p id="selectedPrompt"></p>
+            </div>
             <textarea id="feelingText" name="feelingText" maxlength="700" placeholder="Type the feeling exactly as it is..." required></textarea>
 
             <div class="meta-row">
@@ -187,7 +191,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=4"></script>
-    <script src="nav.js?v=16"></script>
-    <script src="app.js?v=16"></script>
+    <script src="nav.js?v=17"></script>
+    <script src="app.js?v=17"></script>
   </body>
 </html>

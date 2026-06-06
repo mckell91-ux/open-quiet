@@ -288,6 +288,24 @@ h3 {
   font-weight: 800;
 }
 
+.prompt-hint {
+  margin: -2px 0 12px;
+}
+
+.prompt-hint span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--quiet);
+  font-size: 0.86rem;
+}
+
+.prompt-hint p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.4;
+}
+
 textarea {
   width: 100%;
   max-width: 100%;

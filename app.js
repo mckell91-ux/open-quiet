@@ -1,5 +1,6 @@
 const form = document.querySelector("#feelingForm");
 const textarea = document.querySelector("#feelingText");
+const selectedPrompt = document.querySelector("#selectedPrompt");
 const charCount = document.querySelector("#charCount");
 const clearButton = document.querySelector("#clearButton");
 const messageWell = document.querySelector("#messageWell");
@@ -30,6 +31,14 @@ const comfortPhrases = [
   "You're not alone.",
   "I hear you.",
   "That sounds heavy."
+];
+
+const writingPrompts = [
+  "What are you carrying today?",
+  "What do you wish you could say?",
+  "What are you afraid to tell someone?",
+  "What are you grieving?",
+  "What are you hopeful about?"
 ];
 
 const supabaseConfig = window.LEAVE_IT_HERE_SUPABASE || {};
@@ -231,6 +240,12 @@ function createPost(text, mood) {
 
 function updateCount() {
   charCount.textContent = textarea.value.length;
+}
+
+function setRandomPrompt() {
+  const prompt = writingPrompts[Math.floor(Math.random() * writingPrompts.length)];
+  textarea.placeholder = prompt;
+  selectedPrompt.textContent = prompt;
 }
 
 function showReleaseMessage(text, mode) {
@@ -647,6 +662,7 @@ capsuleForm.addEventListener("submit", async (event) => {
 
 textarea.addEventListener("input", updateCount);
 
+setRandomPrompt();
 updateCount();
 renderFeed();
 renderArchive();
