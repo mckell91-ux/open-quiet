@@ -1,4 +1,4 @@
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.feelings (
   id uuid primary key default gen_random_uuid(),
@@ -29,6 +29,12 @@ create unique index if not exists one_comfort_phrase_per_client_per_feeling
 on public.feeling_actions (feeling_id, client_token_hash, comfort_phrase)
 where action_type = 'comfort';
 
+create index if not exists feelings_created_at_desc
+on public.feelings (created_at desc);
+
+create index if not exists feelings_reported_count_desc
+on public.feelings (reported_count desc);
+
 alter table public.feelings enable row level security;
 alter table public.feeling_actions enable row level security;
 
@@ -51,7 +57,7 @@ returns text
 language sql
 stable
 as $$
-  select encode(digest(coalesce(client_token, ''), 'sha256'), 'hex');
+  select encode(extensions.digest(coalesce(client_token, ''), 'sha256'), 'hex');
 $$;
 
 create or replace function public.submit_feeling(
@@ -123,6 +129,7 @@ begin
   update public.feelings
   set
     reported_count = reported_count + 1,
+    -- Auto-hide public posts after 3 unique reports.
     hidden = case when reported_count + 1 >= 3 then true else hidden end
   where id = feeling_id
     and exists (select 1 from inserted);
