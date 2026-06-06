@@ -143,6 +143,7 @@ h3 {
   color: var(--ink);
   font-weight: 800;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .site-header nav {
@@ -156,14 +157,26 @@ h3 {
 }
 
 .mobile-menu summary {
-  min-height: 40px;
-  padding: 9px 13px;
+  width: 42px;
+  height: 38px;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.08);
   cursor: pointer;
   list-style: none;
+}
+
+.mobile-menu summary span {
+  width: 18px;
+  height: 2px;
+  display: block;
+  border-radius: 999px;
+  background: var(--ink);
 }
 
 .mobile-menu summary::-webkit-details-marker {
@@ -745,6 +758,76 @@ select {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .site-header {
+    min-height: 48px;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    padding: 8px 0 6px;
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .brand-row {
+    max-width: calc(100% - 58px);
+  }
+
+  .brand-row span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-menu {
+    display: block;
+    margin-left: auto;
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .mobile-menu nav {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 12;
+    width: min(252px, calc(100vw - 32px));
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(12, 17, 20, 0.97);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(16px);
+  }
+
+  .mobile-menu nav a {
+    min-height: 38px;
+    display: grid;
+    place-items: center;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ink);
+    text-align: center;
+    text-decoration: none;
+    line-height: 1.18;
+  }
+
+  .hero-section {
+    min-height: auto;
+    gap: 12px;
+    padding: 4px 0 18px;
+  }
+
+  .hero-copy {
+    padding-top: 0;
+  }
+
   .hero-section,
   .content-band,
   .write-panel,
@@ -759,7 +842,9 @@ select {
   }
 
   h1 {
-    font-size: clamp(2.55rem, 13vw, 4.3rem);
+    font-size: clamp(2.25rem, 11vw, 3.25rem);
+    line-height: 1;
+    white-space: nowrap;
   }
 
   h2 {
@@ -814,6 +899,27 @@ select {
   select {
     width: 100%;
   }
+
+  .subhead {
+    max-width: 100%;
+    font-size: 1rem;
+    line-height: 1.36;
+  }
+
+  .write-panel {
+    padding: 14px;
+  }
+
+  textarea {
+    min-height: 118px;
+    padding: 14px;
+  }
+
+  .message-well {
+    min-height: 78px;
+    margin-top: 12px;
+    padding: 14px;
+  }
 }
 
 @media (max-width: 680px) {
@@ -829,59 +935,9 @@ select {
     width: calc(100% - 32px);
   }
 
-  .site-header {
-    min-height: auto;
-    align-items: center;
-    flex-direction: row;
-    gap: 12px;
-    padding: 10px 0 8px;
-  }
-
-  .desktop-nav {
-    display: none;
-  }
-
-  .mobile-menu {
-    display: block;
-    margin-left: auto;
-    position: relative;
-  }
-
-  .mobile-menu nav {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    z-index: 12;
-    width: min(260px, calc(100vw - 32px));
-    display: grid;
-    gap: 8px;
-    margin: 0;
-    overflow: visible;
-    padding: 10px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: rgba(12, 17, 20, 0.96);
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
-    backdrop-filter: blur(16px);
-  }
-
-  .mobile-menu nav a {
-    min-height: 40px;
-    display: grid;
-    place-items: center;
-    padding: 8px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--ink);
-    text-align: center;
-    white-space: normal;
-    line-height: 1.18;
-  }
-
   h1 {
-    font-size: clamp(2.75rem, 15vw, 4rem);
-    line-height: 0.96;
+    font-size: clamp(2.2rem, 11vw, 3rem);
+    line-height: 1;
   }
 
   h2 {
@@ -890,8 +946,8 @@ select {
   }
 
   .hero-section {
-    gap: 14px;
-    padding: 4px 0 20px;
+    gap: 12px;
+    padding: 2px 0 18px;
   }
 
   .hero-copy {
@@ -906,7 +962,7 @@ select {
   .write-panel,
   .content-band,
   .tool-panel {
-    padding: 16px;
+    padding: 14px;
   }
 
   .content-band {
@@ -914,7 +970,7 @@ select {
   }
 
   textarea {
-    min-height: 164px;
+    min-height: 112px;
   }
 
   .quiet-form textarea {
