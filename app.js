@@ -14,10 +14,7 @@ const capsuleList = document.querySelector("#capsuleList");
 const privateItemTemplate = document.querySelector("#privateItemTemplate");
 
 const storageKeys = {
-  sharedPosts: "open-quiet-shared-posts",
   privateReleases: "open-quiet-private-releases",
-  reportedPosts: "open-quiet-reported-posts",
-  comfortEvents: "open-quiet-comfort-events",
   letters: "open-quiet-unsent-letters",
   capsules: "open-quiet-time-capsules"
 };
@@ -29,56 +26,66 @@ const moodLabels = {
   hopeful: "Hopeful"
 };
 
-const seedPosts = [
-  {
-    id: "seed-heavy-1",
-    text: "I am tired of being the dependable one today. I want to be held without having to explain every piece of it.",
-    mood: "heavy",
-    createdAt: "Quietly shared"
-  },
-  {
-    id: "seed-lonely-1",
-    text: "I miss someone I cannot talk to anymore. The silence has its own weather.",
-    mood: "lonely",
-    createdAt: "Quietly shared"
-  },
-  {
-    id: "seed-angry-1",
-    text: "I am angry that I had to be calm when someone else was careless with my heart.",
-    mood: "angry",
-    createdAt: "Quietly shared"
-  },
-  {
-    id: "seed-hopeful-1",
-    text: "Something in me still believes tomorrow can be gentler than today.",
-    mood: "hopeful",
-    createdAt: "Quietly shared"
-  }
-];
-
 const comfortPhrases = [
   "You're not alone.",
   "I hear you.",
   "That sounds heavy."
 ];
 
-// Swap this adapter for API calls when Leave It Here moves from static demo storage to a database.
+const supabaseConfig = window.LEAVE_IT_HERE_SUPABASE || {};
+const isSupabaseConfigured = Boolean(
+  window.supabase &&
+  supabaseConfig.url &&
+  supabaseConfig.anonKey &&
+  !supabaseConfig.url.includes("PASTE_") &&
+  !supabaseConfig.anonKey.includes("PASTE_")
+);
+const supabaseClient = isSupabaseConfigured
+  ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
+  : null;
+const sessionClientToken = crypto.randomUUID ? crypto.randomUUID() : `client-${Date.now()}-${Math.random()}`;
+let lastShareAt = 0;
+
+// Public shared posts use Supabase when configured. Private releases stay local only.
 const quietStore = {
   async listSharedPosts() {
-    const posts = readJson(storageKeys.sharedPosts, null);
-    if (posts) {
-      return posts;
+    requireSupabase();
+
+    const { data, error } = await supabaseClient
+      .from("feelings")
+      .select("id,text,mood,created_at,reported_count,comfort_count")
+      .eq("approved", true)
+      .eq("hidden", false)
+      .order("created_at", { ascending: false })
+      .limit(60);
+
+    if (error) {
+      console.error("Could not load shared feelings", error);
+      throw new Error("Supabase read failed. Shared feelings are not connected yet.");
     }
 
-    writeJson(storageKeys.sharedPosts, seedPosts);
-    return seedPosts;
+    return data.map(formatRemotePost);
   },
 
   async addSharedPost(post) {
-    const posts = await this.listSharedPosts();
-    const nextPosts = [post, ...posts].slice(0, 60);
-    writeJson(storageKeys.sharedPosts, nextPosts);
-    return post;
+    requireSupabase();
+
+    if (isClientRateLimited()) {
+      throw new Error("Please wait a minute before sharing another feeling.");
+    }
+
+    const { data, error } = await supabaseClient.rpc("submit_feeling", {
+      feeling_text: post.text,
+      feeling_mood: post.mood,
+      client_token: sessionClientToken
+    });
+
+    if (error) {
+      throw new Error(error.message || "Could not share this feeling.");
+    }
+
+    lastShareAt = Date.now();
+    return formatRemotePost(Array.isArray(data) ? data[0] : data);
   },
 
   async addPrivateRelease(release) {
@@ -88,22 +95,38 @@ const quietStore = {
   },
 
   async listReportedPostIds() {
-    return readJson(storageKeys.reportedPosts, []);
+    return [];
   },
 
   async reportPost(id) {
-    const ids = new Set(await this.listReportedPostIds());
-    ids.add(id);
-    writeJson(storageKeys.reportedPosts, [...ids]);
+    requireSupabase();
+
+    const { error } = await supabaseClient.rpc("report_feeling", {
+      feeling_id: id,
+      client_token: sessionClientToken
+    });
+
+    if (error) {
+      throw new Error(error.message || "Supabase report failed.");
+    }
   },
 
   async listComfortEvents() {
-    return readJson(storageKeys.comfortEvents, []);
+    return [];
   },
 
   async addComfortEvent(event) {
-    const events = await this.listComfortEvents();
-    writeJson(storageKeys.comfortEvents, [event, ...events].slice(0, 120));
+    requireSupabase();
+
+    const { error } = await supabaseClient.rpc("send_comfort", {
+      feeling_id: event.postId,
+      comfort_phrase: event.phrase,
+      client_token: sessionClientToken
+    });
+
+    if (error) {
+      throw new Error(error.message || "Supabase comfort failed.");
+    }
   },
 
   async listLetters() {
@@ -136,6 +159,40 @@ function readJson(key, fallback) {
 
 function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function requireSupabase() {
+  if (!supabaseClient) {
+    throw new Error("Supabase is not connected. Check supabase-config.js and run the Supabase SQL setup.");
+  }
+}
+
+function formatRemotePost(post) {
+  return {
+    id: post.id,
+    text: post.text,
+    mood: post.mood,
+    createdAt: post.createdAt || nowLabelFromDate(post.created_at || post.createdAt),
+    reportedCount: post.reported_count || 0,
+    comfortCount: post.comfort_count || 0
+  };
+}
+
+function nowLabelFromDate(value) {
+  if (!value) {
+    return "Quietly shared";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
+function isClientRateLimited() {
+  return lastShareAt && Date.now() - lastShareAt < 60_000;
 }
 
 function selectedMood() {
@@ -197,11 +254,20 @@ function showReleaseMessage(text, mode) {
 }
 
 async function renderFeed() {
-  const [posts, reportedIds, comfortEvents] = await Promise.all([
-    quietStore.listSharedPosts(),
-    quietStore.listReportedPostIds(),
-    quietStore.listComfortEvents()
-  ]);
+  let posts;
+  let reportedIds;
+  let comfortEvents;
+
+  try {
+    [posts, reportedIds, comfortEvents] = await Promise.all([
+      quietStore.listSharedPosts(),
+      quietStore.listReportedPostIds(),
+      quietStore.listComfortEvents()
+    ]);
+  } catch (error) {
+    showFeedError(error.message);
+    return;
+  }
 
   const reportedSet = new Set(reportedIds);
   const comfortSet = new Set(comfortEvents.map((event) => `${event.postId}:${event.phrase}`));
@@ -236,8 +302,14 @@ async function renderFeed() {
     reportButton.textContent = isReported ? "Reported" : "Report";
     reportButton.disabled = isReported;
     reportButton.addEventListener("click", async () => {
-      await quietStore.reportPost(post.id);
-      await renderFeed();
+      try {
+        await quietStore.reportPost(post.id);
+        reportButton.textContent = "Reported";
+        reportButton.disabled = true;
+        await renderFeed();
+      } catch (error) {
+        showFeedError(error.message);
+      }
     });
 
     const imageButton = node.querySelector(".image-share-button");
@@ -259,13 +331,20 @@ async function renderFeed() {
         comfortButton.classList.add("sent");
       }
       comfortButton.addEventListener("click", async () => {
-        await quietStore.addComfortEvent({
-          id: `comfort-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          postId: post.id,
-          phrase,
-          createdAt: new Date().toISOString()
-        });
-        await renderFeed();
+        try {
+          await quietStore.addComfortEvent({
+            id: `comfort-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            postId: post.id,
+            phrase,
+            createdAt: new Date().toISOString()
+          });
+          comfortButton.textContent = "Comfort sent";
+          comfortButton.disabled = true;
+          comfortButton.classList.add("sent");
+          await renderFeed();
+        } catch (error) {
+          showFeedError(error.message);
+        }
       });
       comfortRow.append(comfortButton);
     });
@@ -275,9 +354,25 @@ async function renderFeed() {
 }
 
 async function renderArchive() {
-  const posts = await quietStore.listSharedPosts();
-  const availablePosts = posts.length ? posts : seedPosts;
-  const post = availablePosts[Math.floor(Math.random() * availablePosts.length)];
+  let posts;
+
+  try {
+    posts = await quietStore.listSharedPosts();
+  } catch (error) {
+    archiveCard.className = "archive-card";
+    archiveCard.innerHTML = "";
+    archiveCard.append(createErrorText(error.message));
+    return;
+  }
+
+  if (!posts.length) {
+    archiveCard.className = "archive-card";
+    archiveCard.innerHTML = "";
+    archiveCard.append(createErrorText("No Supabase posts are available yet."));
+    return;
+  }
+
+  const post = posts[Math.floor(Math.random() * posts.length)];
   archiveCard.className = `archive-card mood-${post.mood}`;
   archiveCard.innerHTML = "";
 
@@ -288,6 +383,21 @@ async function renderArchive() {
   label.append(dot, `${moodLabels[post.mood]} - Leave It Here Archive`);
   text.textContent = post.text;
   archiveCard.append(label, text);
+}
+
+function showFeedError(message) {
+  feedList.innerHTML = "";
+  const error = document.createElement("p");
+  error.className = "empty-state error-state";
+  error.textContent = message;
+  feedList.append(error);
+}
+
+function createErrorText(message) {
+  const error = document.createElement("p");
+  error.className = "error-text";
+  error.textContent = message;
+  return error;
 }
 
 async function renderLetters() {
@@ -456,13 +566,18 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  const mood = selectedMood();
-  const post = createPost(text, mood);
+    const mood = selectedMood();
+    const post = createPost(text, mood);
 
-  if (action === "share") {
-    await quietStore.addSharedPost(post);
-    await renderFeed();
-    await renderArchive();
+    if (action === "share") {
+    try {
+      await quietStore.addSharedPost(post);
+      await renderFeed();
+      await renderArchive();
+    } catch (error) {
+      messageWell.innerHTML = `<p>${error.message}</p>`;
+      return;
+    }
   } else {
     await quietStore.addPrivateRelease(post);
   }

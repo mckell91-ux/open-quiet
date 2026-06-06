@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Leave It Here | leaveithere.org</title>
     <meta name="description" content="Leave It Here is a quiet anonymous place for what you can’t carry alone. No names, accounts, likes, or followers.">
-    <link rel="stylesheet" href="styles.css?v=12">
+    <link rel="stylesheet" href="styles.css?v=15">
   </head>
   <body>
     <a class="skip-link" href="#write">Skip to writing</a>
@@ -91,7 +91,7 @@
             <p class="eyebrow">Shared room</p>
             <h2 id="feed-title">Anonymous feelings people chose to share.</h2>
           </div>
-          <p>Demo posts are stored only in this browser for now. The code is separated so a real database can be connected later.</p>
+          <p>Shared posts can be stored in Supabase so anonymous feelings are visible across visitors. Private releases, letters, and capsules stay on this device.</p>
         </div>
 
         <fieldset class="filter-group" aria-label="Filter shared feelings by mood">
@@ -185,7 +185,9 @@
       </article>
     </template>
 
-    <script src="nav.js?v=12"></script>
-    <script src="app.js?v=12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js?v=3"></script>
+    <script src="nav.js?v=15"></script>
+    <script src="app.js?v=15"></script>
   </body>
 </html>
