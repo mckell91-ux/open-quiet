@@ -364,7 +364,8 @@ textarea:focus {
 .primary-button,
 .secondary-button,
 .ghost-button,
-.report-button {
+.report-button,
+.image-share-button {
   padding: 0 16px;
 }
 
@@ -381,7 +382,8 @@ textarea:focus {
 }
 
 .ghost-button,
-.report-button {
+.report-button,
+.image-share-button {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.1);
 }
@@ -469,6 +471,14 @@ textarea:focus {
   margin: 0;
   color: var(--muted);
   line-height: 1.52;
+}
+
+.image-share-button {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 18px;
+  color: var(--quiet);
+  font-size: 0.88rem;
 }
 
 .comfort-row {

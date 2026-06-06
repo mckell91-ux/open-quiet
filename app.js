@@ -240,6 +240,12 @@ async function renderFeed() {
       await renderFeed();
     });
 
+    const imageButton = node.querySelector(".image-share-button");
+    imageButton.disabled = isReported;
+    imageButton.addEventListener("click", () => {
+      downloadFeelingImage(post);
+    });
+
     const comfortRow = node.querySelector(".comfort-row");
     comfortPhrases.forEach((phrase) => {
       const comfortButton = document.createElement("button");
@@ -323,6 +329,119 @@ function createPrivateItem(title, body) {
   node.querySelector("strong").textContent = title;
   node.querySelector("p").textContent = body;
   return node;
+}
+
+function downloadFeelingImage(post) {
+  const canvas = document.createElement("canvas");
+  const width = 1080;
+  const height = 1350;
+  const scale = window.devicePixelRatio || 1;
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  const context = canvas.getContext("2d");
+  context.scale(scale, scale);
+
+  const gradient = context.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, "#0c1719");
+  gradient.addColorStop(0.52, "#172326");
+  gradient.addColorStop(1, "#211817");
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+
+  context.fillStyle = "rgba(116, 215, 196, 0.14)";
+  context.beginPath();
+  context.arc(160, 170, 230, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "rgba(240, 166, 166, 0.13)";
+  context.beginPath();
+  context.arc(930, 1120, 280, 0, Math.PI * 2);
+  context.fill();
+
+  roundedRect(context, 92, 110, 896, 1110, 34);
+  context.fillStyle = "rgba(247, 241, 234, 0.08)";
+  context.fill();
+  context.strokeStyle = "rgba(247, 241, 234, 0.22)";
+  context.lineWidth = 2;
+  context.stroke();
+
+  context.fillStyle = moodColor(post.mood);
+  context.beginPath();
+  context.arc(148, 176, 12, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "rgba(247, 241, 234, 0.68)";
+  context.font = "700 28px system-ui, sans-serif";
+  context.letterSpacing = "2px";
+  context.fillText(`${moodLabels[post.mood].toUpperCase()} - LEAVEITHERE.ORG`, 176, 186);
+
+  context.fillStyle = "#f7f1ea";
+  context.font = "700 56px Georgia, serif";
+  wrapCanvasText(context, post.text, 148, 330, 784, 78, 10);
+
+  context.fillStyle = "rgba(247, 241, 234, 0.66)";
+  context.font = "400 30px system-ui, sans-serif";
+  context.fillText("A quiet place for what you can't carry alone.", 148, 1100);
+
+  context.fillStyle = "#74d7c4";
+  context.font = "800 34px system-ui, sans-serif";
+  context.fillText("Leave It Here", 148, 1154);
+
+  const link = document.createElement("a");
+  link.download = `leave-it-here-${post.mood}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+function wrapCanvasText(context, text, x, y, maxWidth, lineHeight, maxLines) {
+  const words = text.split(/\s+/);
+  const lines = [];
+  let line = "";
+
+  words.forEach((word) => {
+    const testLine = line ? `${line} ${word}` : word;
+    if (context.measureText(testLine).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = testLine;
+    }
+  });
+
+  if (line) {
+    lines.push(line);
+  }
+
+  lines.slice(0, maxLines).forEach((lineText, index) => {
+    const suffix = index === maxLines - 1 && lines.length > maxLines ? "..." : "";
+    context.fillText(`${lineText}${suffix}`, x, y + index * lineHeight);
+  });
+}
+
+function roundedRect(context, x, y, width, height, radius) {
+  context.beginPath();
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.closePath();
+}
+
+function moodColor(mood) {
+  return {
+    heavy: "#74d7c4",
+    angry: "#c98468",
+    lonely: "#f0a6a6",
+    hopeful: "#f4d58d"
+  }[mood] || "#74d7c4";
 }
 
 form.addEventListener("submit", async (event) => {
