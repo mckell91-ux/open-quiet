@@ -3,18 +3,19 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Open Quiet</title>
-    <link rel="stylesheet" href="styles.css?v=7">
+    <title>Leave It Here | leaveithere.org</title>
+    <meta name="description" content="Leave It Here is a quiet anonymous place for what you can’t carry alone. No names, accounts, likes, or followers.">
+    <link rel="stylesheet" href="styles.css?v=8">
   </head>
   <body>
     <a class="skip-link" href="#write">Skip to writing</a>
 
     <header class="site-header">
-      <a class="brand-row" href="index.html" aria-label="Open Quiet home">
+      <a class="brand-row" href="index.html" aria-label="Leave It Here home">
         <span class="mark" aria-hidden="true"></span>
-        <span>Open Quiet</span>
+        <span>Leave It Here</span>
       </a>
-      <nav aria-label="Main navigation">
+      <nav class="desktop-nav" aria-label="Main navigation">
         <a href="#about">About</a>
         <a href="#feed">Shared feelings</a>
         <a href="#archive">Archive</a>
@@ -23,19 +24,27 @@
         <a href="privacy.html">Privacy</a>
         <a href="guidelines.html">Guidelines</a>
       </nav>
+      <details class="mobile-menu">
+        <summary>Menu</summary>
+        <nav aria-label="Mobile navigation">
+          <a href="#write">Write</a>
+          <a href="#feed">Shared feelings</a>
+          <a href="#archive">Archive</a>
+          <a href="#letters">Letters</a>
+          <a href="#capsule">Time capsule</a>
+          <a href="#about">About</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="guidelines.html">Guidelines</a>
+        </nav>
+      </details>
     </header>
-
-    <aside class="crisis-box" aria-label="Crisis support">
-      <strong>Need immediate support?</strong>
-      <p>If you might hurt yourself or someone else, call or text <a href="https://988lifeline.org/" target="_blank" rel="noreferrer">988</a>.</p>
-    </aside>
 
     <main>
       <section class="hero-section" id="write" aria-labelledby="site-title">
         <div class="hero-copy">
-          <p class="eyebrow">Anonymous emotional release</p>
+          <p class="eyebrow">leaveithere.org</p>
           <h1 id="site-title">Leave It Here.</h1>
-          <p class="subhead">No names. No accounts. A soft place to write what is heavy, then choose whether it stays private or joins the quiet shared room.</p>
+          <p class="subhead">A quiet place for what you can’t carry alone.</p>
         </div>
 
         <section class="write-panel" aria-label="Write a feeling">
@@ -70,12 +79,17 @@
         </section>
       </section>
 
+      <aside class="crisis-box" aria-label="Crisis support">
+        <strong>Need immediate support?</strong>
+        <p>If you might hurt yourself or someone else, call or text <a href="https://988lifeline.org/" target="_blank" rel="noreferrer">988</a>.</p>
+      </aside>
+
       <section class="content-band about-band" id="about" aria-labelledby="about-title">
         <div>
           <p class="eyebrow">About</p>
-          <h2 id="about-title">Open Quiet is not a timeline.</h2>
+          <h2 id="about-title">Leave It Here is not a timeline.</h2>
         </div>
-        <p>It is a calm anonymous room for feelings that need somewhere to go. There are no profiles, followers, likes, comments, or popularity signals. Shared posts are simple anonymous notes, shown softly and filterable by mood. Comfort is limited to a few kind phrases so the room never turns into a battlefield.</p>
+        <p>Leave It Here is a calm anonymous room for feelings that need somewhere to go. There are no profiles, followers, likes, comments, or popularity signals. Shared posts are simple anonymous notes, shown softly and filterable by mood. Comfort is limited to a few kind phrases so the room never turns into a battlefield.</p>
       </section>
 
       <section class="content-band feed-band" id="feed" aria-labelledby="feed-title">
@@ -102,7 +116,7 @@
       <section class="content-band archive-band" id="archive" aria-labelledby="archive-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">The Quiet Archive</p>
+            <p class="eyebrow">Leave It Here Archive</p>
             <h2 id="archive-title">One anonymous feeling at a time.</h2>
           </div>
           <p>No ranking, no trending, no popularity. Just a random note from the shared room.</p>
@@ -150,7 +164,8 @@
     </main>
 
     <footer class="site-footer">
-      <span>Open Quiet</span>
+      <span>Leave It Here</span>
+      <small>leaveithere.org</small>
       <a href="privacy.html">Privacy</a>
       <a href="guidelines.html">Community Guidelines</a>
     </footer>
@@ -176,6 +191,6 @@
       </article>
     </template>
 
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=8"></script>
   </body>
 </html>

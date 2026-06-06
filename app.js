@@ -62,7 +62,7 @@ const comfortPhrases = [
   "That sounds heavy."
 ];
 
-// Swap this adapter for API calls when Open Quiet moves from static demo storage to a database.
+// Swap this adapter for API calls when Leave It Here moves from static demo storage to a database.
 const quietStore = {
   async listSharedPosts() {
     const posts = readJson(storageKeys.sharedPosts, null);
@@ -279,7 +279,7 @@ async function renderArchive() {
   const dot = document.createElement("span");
   const text = document.createElement("p");
   dot.className = "mood-dot";
-  label.append(dot, `${moodLabels[post.mood]} - Quiet Archive`);
+  label.append(dot, `${moodLabels[post.mood]} - Leave It Here Archive`);
   text.textContent = post.text;
   archiveCard.append(label, text);
 }

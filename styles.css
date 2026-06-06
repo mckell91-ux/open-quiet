@@ -151,6 +151,29 @@ h3 {
   justify-content: flex-end;
 }
 
+.mobile-menu {
+  display: none;
+}
+
+.mobile-menu summary {
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  list-style: none;
+}
+
+.mobile-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-menu[open] summary {
+  border-color: rgba(116, 215, 196, 0.55);
+}
+
 .site-header nav a,
 .site-footer a {
   padding: 9px 10px;
@@ -618,6 +641,10 @@ select {
   font-weight: 800;
 }
 
+.site-footer small {
+  color: var(--quiet);
+}
+
 .policy-page {
   padding: 38px 0 120px;
 }
@@ -794,22 +821,41 @@ select {
 
   .site-header {
     min-height: auto;
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
     gap: 12px;
-    padding: 14px 0 12px;
+    padding: 10px 0 8px;
   }
 
-  .site-header nav {
-    width: 100%;
+  .desktop-nav {
+    display: none;
+  }
+
+  .mobile-menu {
+    display: block;
+    margin-left: auto;
+    position: relative;
+  }
+
+  .mobile-menu nav {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 12;
+    width: min(260px, calc(100vw - 32px));
     display: grid;
     gap: 8px;
     margin: 0;
     overflow: visible;
-    padding: 0;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(12, 17, 20, 0.96);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(16px);
   }
 
-  .site-header nav a {
+  .mobile-menu nav a {
     min-height: 40px;
     display: grid;
     place-items: center;
@@ -834,8 +880,8 @@ select {
   }
 
   .hero-section {
-    gap: 16px;
-    padding: 10px 0 22px;
+    gap: 14px;
+    padding: 4px 0 20px;
   }
 
   .hero-copy {
@@ -920,8 +966,8 @@ select {
 
   .crisis-box {
     position: static;
-    width: min(100% - 20px, 1180px);
-    margin: 0 auto 12px;
+    width: calc(100% - 32px);
+    margin: 0 auto 16px;
     padding: 12px;
     display: grid;
     column-gap: 12px;
