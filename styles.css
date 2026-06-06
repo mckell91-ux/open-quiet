@@ -15,15 +15,21 @@
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
+  width: 100%;
+  overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
 body {
+  width: 100%;
+  overflow-x: hidden;
   min-height: 100vh;
   margin: 0;
   color: var(--ink);
@@ -38,6 +44,7 @@ button,
 textarea,
 input,
 select {
+  max-width: 100%;
   font: inherit;
 }
 
@@ -52,6 +59,7 @@ a {
   color: var(--teal);
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
+  overflow-wrap: anywhere;
 }
 
 h1,
@@ -59,6 +67,7 @@ h2,
 h3,
 p {
   margin-top: 0;
+  overflow-wrap: anywhere;
 }
 
 h1 {
@@ -102,6 +111,7 @@ h3 {
 .content-band,
 .policy-page {
   width: min(1180px, calc(100% - 32px));
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -128,6 +138,7 @@ h3 {
 }
 
 .brand-row {
+  min-width: 0;
   gap: 12px;
   color: var(--ink);
   font-weight: 800;
@@ -226,6 +237,8 @@ h3 {
 .archive-card,
 .tool-panel,
 .private-item {
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -246,6 +259,7 @@ h3 {
 
 textarea {
   width: 100%;
+  max-width: 100%;
   min-height: 198px;
   resize: vertical;
   display: block;
@@ -271,6 +285,7 @@ textarea:focus {
 
 .mood-group,
 .filter-group {
+  max-width: 100%;
   min-width: 0;
   flex-wrap: wrap;
   gap: 8px;
@@ -557,6 +572,7 @@ textarea:focus {
 
 select {
   width: 100%;
+  max-width: 100%;
   min-height: 46px;
   padding: 0 12px;
   border: 1px solid rgba(255, 255, 255, 0.28);
@@ -664,6 +680,105 @@ select {
   }
 }
 
+@media (max-width: 768px) {
+  body {
+    background:
+      linear-gradient(180deg, rgba(5, 10, 12, 0.5), rgba(5, 10, 12, 0.98) 88%),
+      linear-gradient(90deg, rgba(4, 10, 13, 0.82), rgba(8, 13, 16, 0.48) 52%, rgba(4, 10, 13, 0.82)),
+      url("assets/hero.png") center top / cover no-repeat,
+      #10181b;
+  }
+
+  .site-header,
+  .site-footer,
+  .hero-section,
+  .content-band,
+  .policy-page,
+  .crisis-box {
+    width: calc(100% - 32px);
+    max-width: 100%;
+  }
+
+  .hero-section,
+  .about-band,
+  .section-heading,
+  .feed-list,
+  .tools-band,
+  .site-header nav {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero-section,
+  .content-band,
+  .write-panel,
+  .policy-card,
+  .archive-card,
+  .tool-panel,
+  .post-card,
+  .private-item,
+  .message-well {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.55rem, 13vw, 4.3rem);
+  }
+
+  h2 {
+    font-size: clamp(1.6rem, 7vw, 2.5rem);
+  }
+
+  .choice-row,
+  .meta-row,
+  .comfort-row,
+  .filter-group,
+  .mood-group {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .post-card header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .post-card header > div {
+    min-width: 0;
+  }
+
+  .choice-row button,
+  .quiet-form button,
+  .archive-band > .ghost-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .comfort-button {
+    flex: 1 1 140px;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .mood-group label,
+  .filter-group label {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 0;
+  }
+
+  .mood-group span,
+  .filter-group span {
+    min-width: 0;
+    width: 100%;
+  }
+
+  textarea,
+  input,
+  select {
+    width: 100%;
+  }
+}
+
 @media (max-width: 680px) {
   body {
     padding-bottom: 0;
@@ -674,7 +789,7 @@ select {
   .hero-section,
   .content-band,
   .policy-page {
-    width: min(100% - 20px, 1180px);
+    width: calc(100% - 32px);
   }
 
   .site-header {
@@ -688,7 +803,6 @@ select {
   .site-header nav {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     margin: 0;
     overflow: visible;
