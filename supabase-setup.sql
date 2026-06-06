@@ -136,10 +136,13 @@ begin
 end;
 $$;
 
+drop function if exists public.send_comfort(uuid, text, text);
+drop function if exists public.send_comfort(text, text, uuid);
+
 create or replace function public.send_comfort(
-  target_feeling_id uuid,
+  client_token text,
   selected_comfort_phrase text,
-  client_token text
+  target_feeling_id uuid
 )
 returns void
 language plpgsql
@@ -175,4 +178,4 @@ revoke all on public.feeling_actions from anon, authenticated;
 grant select on public.feelings to anon;
 grant execute on function public.submit_feeling(text, text, text) to anon;
 grant execute on function public.report_feeling(uuid, text) to anon;
-grant execute on function public.send_comfort(uuid, text, text) to anon;
+grant execute on function public.send_comfort(text, text, uuid) to anon;
