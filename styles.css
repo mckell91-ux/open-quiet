@@ -666,7 +666,7 @@ select {
 
 @media (max-width: 680px) {
   body {
-    padding-bottom: 104px;
+    padding-bottom: 0;
   }
 
   .site-header,
@@ -679,35 +679,39 @@ select {
 
   .site-header {
     min-height: auto;
-    align-items: center;
-    flex-direction: row;
-    padding: 14px 0 8px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 0 12px;
   }
 
   .site-header nav {
     width: 100%;
-    margin: 4px -10px 0;
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding: 0 10px 8px;
-    scrollbar-width: none;
-  }
-
-  .site-header nav::-webkit-scrollbar {
-    display: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    overflow: visible;
+    padding: 0;
   }
 
   .site-header nav a {
-    padding: 8px 9px;
-    white-space: nowrap;
+    min-height: 40px;
+    display: grid;
+    place-items: center;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ink);
+    text-align: center;
+    white-space: normal;
+    line-height: 1.18;
   }
 
   h1 {
-    font-size: clamp(3.05rem, 18vw, 4.7rem);
-    line-height: 0.92;
+    font-size: clamp(2.75rem, 15vw, 4rem);
+    line-height: 0.96;
   }
 
   h2 {
@@ -716,8 +720,8 @@ select {
   }
 
   .hero-section {
-    gap: 20px;
-    padding: 14px 0 28px;
+    gap: 16px;
+    padding: 10px 0 22px;
   }
 
   .hero-copy {
@@ -726,12 +730,17 @@ select {
 
   .subhead {
     font-size: 1rem;
+    line-height: 1.42;
   }
 
   .write-panel,
   .content-band,
   .tool-panel {
-    padding: 18px;
+    padding: 16px;
+  }
+
+  .content-band {
+    margin-bottom: 16px;
   }
 
   textarea {
@@ -788,7 +797,7 @@ select {
   .site-footer {
     align-items: flex-start;
     flex-direction: column;
-    padding-bottom: 22px;
+    padding-bottom: 28px;
   }
 
   .site-footer span {
@@ -796,14 +805,14 @@ select {
   }
 
   .crisis-box {
-    right: 10px;
-    bottom: 10px;
-    width: calc(100% - 20px);
+    position: static;
+    width: min(100% - 20px, 1180px);
+    margin: 0 auto 12px;
     padding: 12px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 12px;
     align-items: center;
+    box-shadow: none;
   }
 
   .crisis-box strong {
@@ -812,9 +821,17 @@ select {
   }
 
   .crisis-box p {
-    grid-column: 1 / -1;
     margin-top: 4px;
     font-size: 0.82rem;
+  }
+
+  #write,
+  #about,
+  #feed,
+  #archive,
+  #letters,
+  #capsule {
+    scroll-margin-top: 12px;
   }
 }
 
@@ -833,11 +850,7 @@ select {
   }
 
   .site-header {
-    flex-wrap: wrap;
-  }
-
-  .site-header nav {
-    order: 2;
+    gap: 10px;
   }
 
   .mood-group label,
