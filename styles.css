@@ -519,6 +519,28 @@ textarea:focus {
   margin-bottom: 22px;
 }
 
+.feed-scroll-area {
+  height: 70vh;
+  min-height: 440px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 4px 18px;
+  scrollbar-color: rgba(116, 215, 196, 0.42) rgba(255, 255, 255, 0.06);
+}
+
+.feed-sticky-controls {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 -4px;
+  padding: 0 4px 12px;
+  background: linear-gradient(180deg, rgba(18, 24, 27, 0.98), rgba(18, 24, 27, 0.9));
+}
+
 .feed-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -593,7 +615,8 @@ textarea:focus {
 }
 
 .random-feeling-button {
-  margin-top: 18px;
+  margin-top: 0;
+  flex: 0 0 auto;
 }
 
 .random-spotlight {
@@ -1036,6 +1059,23 @@ select {
   .mood-group {
     flex-wrap: wrap;
     max-width: 100%;
+  }
+
+  .feed-scroll-area {
+    height: 60vh;
+    min-height: 360px;
+    padding-bottom: 14px;
+  }
+
+  .feed-sticky-controls {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 10px;
+  }
+
+  .feed-sticky-controls .random-feeling-button {
+    width: 100%;
   }
 
   .post-card header {
