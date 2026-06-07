@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Leave It Here | leaveithere.org</title>
-    <meta name="description" content="Leave It Here is a quiet anonymous place for what you can’t carry alone. No names, accounts, likes, or followers.">
-    <link rel="stylesheet" href="styles.css?v=22">
+    <meta name="description" content="Leave It Here is a quiet anonymous place for what you can't carry alone. No names, accounts, likes, or followers.">
+    <link rel="stylesheet" href="styles.css?v=23">
   </head>
   <body>
     <a class="skip-link" href="#write">Skip to writing</a>
@@ -37,13 +37,27 @@
         <div class="hero-copy">
           <p class="eyebrow">leaveithere.org</p>
           <h1 id="site-title">Leave It Here.</h1>
-          <p class="subhead">A quiet place for what you can’t carry alone.</p>
+          <div class="activity-stats" id="activityStats" aria-live="polite" hidden>
+            <div>
+              <strong id="totalFeelings">0</strong>
+              <span>anonymous feelings shared</span>
+            </div>
+            <div>
+              <strong id="totalComforts">0</strong>
+              <span>comforts sent</span>
+            </div>
+            <div>
+              <strong id="feelingsToday">0</strong>
+              <span>shared today</span>
+            </div>
+          </div>
+          <p class="subhead">A quiet place for what you can't carry alone.</p>
         </div>
 
         <section class="write-panel" aria-label="Write a feeling">
           <form class="feeling-form" id="feelingForm">
             <label for="feelingText">What do you need to say?</label>
-            <p class="posting-guideline">Share your feelings, not personal attacks. Please avoid names, threats, or private information.</p>
+            <p class="posting-guideline">Share your feelings, not personal attacks. Please avoid names, threats, private information, spam, or sexual trolling.</p>
             <div class="prompt-hint" aria-live="polite">
               <span>Need a starting point?</span>
               <p id="selectedPrompt"></p>
@@ -74,6 +88,7 @@
           <div class="message-well" id="messageWell" aria-live="polite">
             <p>Your words can pass through here and fade, or become one anonymous note among others.</p>
           </div>
+          <p class="trust-note">No accounts. No public profiles. Shared posts are public and stored in Supabase. Private releases, letters, and time capsules stay on your device.</p>
         </section>
       </section>
 
@@ -109,7 +124,9 @@
         </fieldset>
 
         <button class="random-feeling-button" type="button" id="randomFeelingButton">Random Feeling</button>
+        <div class="random-spotlight" id="randomSpotlight" aria-live="polite" hidden></div>
         <div class="feed-list" id="feedList" aria-live="polite"></div>
+        <button class="load-more-button ghost-button" type="button" id="loadMoreButton" hidden>Load more</button>
       </section>
 
       <section class="content-band archive-band" id="archive" aria-labelledby="archive-title">
@@ -181,6 +198,7 @@
         <p></p>
         <div class="post-stats">
           <span class="comfort-count"></span>
+          <div class="phrase-counts"></div>
         </div>
         <button type="button" class="image-share-button">Share this feeling as an image</button>
         <div class="comfort-row" aria-label="Send comfort"></div>
@@ -196,7 +214,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js?v=4"></script>
-    <script src="nav.js?v=22"></script>
-    <script src="app.js?v=22"></script>
+    <script src="nav.js?v=23"></script>
+    <script src="app.js?v=23"></script>
   </body>
 </html>

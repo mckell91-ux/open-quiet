@@ -261,6 +261,44 @@ h3 {
   line-height: 1.5;
 }
 
+.activity-stats {
+  max-width: 680px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0 0;
+}
+
+.activity-stats[hidden] {
+  display: none;
+}
+
+.activity-stats div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.activity-stats strong,
+.activity-stats span {
+  display: block;
+}
+
+.activity-stats strong {
+  color: var(--ink);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1;
+}
+
+.activity-stats span {
+  margin-top: 6px;
+  color: var(--quiet);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
 .write-panel,
 .content-band,
 .post-card,
@@ -447,6 +485,13 @@ textarea:focus {
   animation: release 2.2s ease forwards;
 }
 
+.trust-note {
+  margin: 14px 0 0;
+  color: var(--quiet);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .content-band {
   margin-bottom: 28px;
   padding: clamp(24px, 4vw, 44px);
@@ -528,8 +573,65 @@ textarea:focus {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.phrase-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.phrase-counts span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: var(--quiet);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.76rem;
+}
+
 .random-feeling-button {
   margin-top: 18px;
+}
+
+.random-spotlight {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid rgba(116, 215, 196, 0.28);
+  border-radius: 8px;
+  background: var(--panel-strong);
+}
+
+.random-spotlight[hidden] {
+  display: none;
+}
+
+.random-spotlight strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.random-spotlight p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.load-more-button {
+  display: block;
+  margin: 18px auto 0;
+}
+
+.load-more-button[hidden] {
+  display: none;
 }
 
 .post-card.is-random-target {
@@ -980,6 +1082,12 @@ select {
     max-width: 100%;
     font-size: 1rem;
     line-height: 1.36;
+  }
+
+  .activity-stats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 14px;
   }
 
   .write-panel {

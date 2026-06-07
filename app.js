@@ -4,8 +4,14 @@ const selectedPrompt = document.querySelector("#selectedPrompt");
 const charCount = document.querySelector("#charCount");
 const clearButton = document.querySelector("#clearButton");
 const messageWell = document.querySelector("#messageWell");
+const activityStats = document.querySelector("#activityStats");
+const totalFeelings = document.querySelector("#totalFeelings");
+const totalComforts = document.querySelector("#totalComforts");
+const feelingsToday = document.querySelector("#feelingsToday");
 const feedList = document.querySelector("#feedList");
 const randomFeelingButton = document.querySelector("#randomFeelingButton");
+const randomSpotlight = document.querySelector("#randomSpotlight");
+const loadMoreButton = document.querySelector("#loadMoreButton");
 const postTemplate = document.querySelector("#postTemplate");
 const archiveCard = document.querySelector("#archiveCard");
 const shuffleArchive = document.querySelector("#shuffleArchive");
@@ -42,10 +48,12 @@ const writingPrompts = [
   "What are you grieving?",
   "What are you hopeful about?"
 ];
+const pageSize = 12;
 let currentPromptIndex = -1;
 let visiblePostElements = [];
-let sharedPostsCache = null;
+let sharedPostsCache = [];
 let sharedPostsRequest = null;
+let feedHasMore = false;
 
 const supabaseConfig = window.LEAVE_IT_HERE_SUPABASE || {};
 const isSupabaseConfigured = Boolean(
@@ -66,31 +74,30 @@ const quietStore = {
   async listSharedPosts(options = {}) {
     requireSupabase();
 
-    const force = Boolean(options.force);
-    if (!force && sharedPostsCache) {
-      return sharedPostsCache;
-    }
+    const reset = Boolean(options.reset);
+    const filter = options.filter || "all";
+    const offset = reset ? 0 : sharedPostsCache.length;
 
-    if (!force && sharedPostsRequest) {
+    if (!reset && sharedPostsRequest) {
       return sharedPostsRequest;
     }
 
     sharedPostsRequest = (async () => {
       try {
-        const { data, error } = await supabaseClient
-          .from("feelings")
-          .select("id,text,mood,created_at,reported_count,comfort_count")
-          .eq("approved", true)
-          .eq("hidden", false)
-          .order("created_at", { ascending: false })
-          .limit(40);
+        const { data, error } = await supabaseClient.rpc("list_public_feelings", {
+          p_limit: pageSize,
+          p_offset: offset,
+          p_mood: filter
+        });
 
         if (error) {
           console.error("Could not load shared feelings", error);
           throw new Error("Supabase read failed. Shared feelings are not connected yet.");
         }
 
-        sharedPostsCache = data.map(formatRemotePost);
+        const posts = (data || []).map(formatRemotePost);
+        sharedPostsCache = reset ? posts : [...sharedPostsCache, ...posts];
+        feedHasMore = posts.length === pageSize;
         return sharedPostsCache;
       } finally {
         sharedPostsRequest = null;
@@ -108,9 +115,9 @@ const quietStore = {
     }
 
     const { data, error } = await supabaseClient.rpc("submit_feeling", {
-      feeling_text: post.text,
-      feeling_mood: post.mood,
-      client_token: sessionClientToken
+      p_feeling_text: post.text,
+      p_feeling_mood: post.mood,
+      p_client_token: sessionClientToken
     });
 
     if (error) {
@@ -119,9 +126,7 @@ const quietStore = {
 
     lastShareAt = Date.now();
     const savedPost = formatRemotePost(Array.isArray(data) ? data[0] : data);
-    if (sharedPostsCache) {
-      sharedPostsCache = [savedPost, ...sharedPostsCache].slice(0, 40);
-    }
+    sharedPostsCache = [savedPost, ...sharedPostsCache].slice(0, Math.max(pageSize, sharedPostsCache.length));
     return savedPost;
   },
 
@@ -132,29 +137,46 @@ const quietStore = {
   },
 
   async listReportedPostIds() {
-    return [];
+    requireSupabase();
+
+    const { data, error } = await supabaseClient.rpc("list_my_reports", {
+      p_client_token: sessionClientToken
+    });
+
+    if (error) {
+      console.warn("Could not load report history", error);
+      return [];
+    }
+
+    return (data || []).map((event) => event.feeling_id);
   },
 
   async reportPost(id) {
     requireSupabase();
 
-    const { error } = await supabaseClient.rpc("report_feeling", {
-      target_feeling_id: id,
-      client_token: sessionClientToken
+    const { data, error } = await supabaseClient.rpc("report_feeling", {
+      p_client_token: sessionClientToken,
+      p_feeling_id: id
     });
 
     if (error) {
       throw new Error(error.message || "Supabase report failed.");
     }
 
-    sharedPostsCache = null;
+    const result = Array.isArray(data) ? data[0] : data;
+    sharedPostsCache = sharedPostsCache.filter((post) => post.id !== id || !result?.hidden);
+    return {
+      saved: Boolean(result?.saved),
+      message: result?.message || "Thanks. This helps keep the room safe.",
+      hidden: Boolean(result?.hidden)
+    };
   },
 
   async listComfortEvents() {
     requireSupabase();
 
     const { data, error } = await supabaseClient.rpc("list_my_comforts", {
-      client_token: sessionClientToken
+      p_client_token: sessionClientToken
     });
 
     if (error) {
@@ -172,9 +194,9 @@ const quietStore = {
     requireSupabase();
 
     const { data, error } = await supabaseClient.rpc("send_comfort", {
-      target_feeling_id: event.postId,
-      selected_comfort_phrase: event.phrase,
-      client_token: sessionClientToken
+      p_client_token: sessionClientToken,
+      p_selected_comfort_phrase: event.phrase,
+      p_feeling_id: event.postId
     });
 
     if (error) {
@@ -185,8 +207,34 @@ const quietStore = {
     return {
       saved: Boolean(result?.saved),
       message: result?.message || "You already sent comfort here.",
-      comfortCount: Number(result?.comfort_count) || 0
+      comfortCount: Number(result?.comfort_count) || 0,
+      comfortPhraseCounts: result?.comfort_phrase_counts || {}
     };
+  },
+
+  async getPublicStats() {
+    requireSupabase();
+
+    const { data, error } = await supabaseClient.rpc("get_public_stats");
+
+    if (error) {
+      throw new Error("Stats are unavailable right now.");
+    }
+
+    return Array.isArray(data) ? data[0] : data;
+  },
+
+  async getRandomPost() {
+    requireSupabase();
+
+    const { data, error } = await supabaseClient.rpc("random_public_feeling");
+
+    if (error) {
+      throw new Error("Could not load a random feeling right now.");
+    }
+
+    const post = Array.isArray(data) ? data[0] : data;
+    return post ? formatRemotePost(post) : null;
   },
 
   async listLetters() {
@@ -245,8 +293,20 @@ function formatRemotePost(post) {
     mood: post.mood,
     createdAt: post.createdAt || nowLabelFromDate(post.created_at || post.createdAt),
     reportedCount: post.reported_count || 0,
-    comfortCount: post.comfort_count || 0
+    comfortCount: post.comfort_count || 0,
+    comfortPhraseCounts: normalizePhraseCounts(post.comfort_phrase_counts)
   };
+}
+
+function normalizePhraseCounts(value) {
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+
+  return comfortPhrases.reduce((counts, phrase) => {
+    counts[phrase] = Number(value[phrase]) || 0;
+    return counts;
+  }, {});
 }
 
 function nowLabelFromDate(value) {
@@ -341,14 +401,37 @@ function showReleaseMessage(text, mode) {
   }, 2300);
 }
 
+async function renderStats() {
+  try {
+    const stats = await quietStore.getPublicStats();
+    if (!stats) {
+      activityStats.hidden = true;
+      return;
+    }
+
+    totalFeelings.textContent = formatCount(stats.total_feelings);
+    totalComforts.textContent = formatCount(stats.total_comforts);
+    feelingsToday.textContent = formatCount(stats.feelings_today);
+    activityStats.hidden = false;
+  } catch {
+    activityStats.hidden = true;
+  }
+}
+
+function formatCount(value) {
+  return new Intl.NumberFormat().format(Number(value) || 0);
+}
+
 async function renderFeed(options = {}) {
   let posts;
   let reportedIds;
   let comfortEvents;
+  const reset = options.reset ?? true;
+  const filter = selectedFilter();
 
   try {
     [posts, reportedIds, comfortEvents] = await Promise.all([
-      quietStore.listSharedPosts(options),
+      quietStore.listSharedPosts({ reset, filter }),
       quietStore.listReportedPostIds(),
       quietStore.listComfortEvents()
     ]);
@@ -359,21 +442,20 @@ async function renderFeed(options = {}) {
 
   const reportedSet = new Set(reportedIds);
   const comfortSet = new Set(comfortEvents.map((event) => `${event.postId}:${event.phrase}`));
-  const filter = selectedFilter();
-  const visiblePosts = filter === "all" ? posts : posts.filter((post) => post.mood === filter);
 
   feedList.innerHTML = "";
   visiblePostElements = [];
 
-  if (!visiblePosts.length) {
+  if (!posts.length) {
     const empty = document.createElement("p");
     empty.className = "empty-state";
     empty.textContent = "No shared feelings in this mood yet.";
     feedList.append(empty);
+    updateLoadMoreButton();
     return;
   }
 
-  visiblePosts.forEach((post) => {
+  posts.forEach((post) => {
     const node = postTemplate.content.firstElementChild.cloneNode(true);
     const isReported = reportedSet.has(post.id);
 
@@ -393,12 +475,15 @@ async function renderFeed(options = {}) {
     reportButton.disabled = isReported;
     reportButton.addEventListener("click", async () => {
       try {
-        await quietStore.reportPost(post.id);
+        const result = await quietStore.reportPost(post.id);
         reportButton.textContent = "Reported";
         reportButton.disabled = true;
-        await renderFeed({ force: true });
+        if (result.hidden) {
+          await renderFeed({ reset: true });
+        }
+        showFeedNotice(result.message);
       } catch (error) {
-        showFeedError(error.message);
+        showFeedNotice(error.message);
       }
     });
 
@@ -433,7 +518,8 @@ async function renderFeed(options = {}) {
             comfortButton.disabled = true;
             comfortButton.classList.add("sent");
             post.comfortCount = savedComfort.comfortCount || post.comfortCount;
-            updateCachedComfortCount(post.id, post.comfortCount);
+            post.comfortPhraseCounts = savedComfort.comfortPhraseCounts || post.comfortPhraseCounts;
+            updateCachedComfortCount(post.id, post.comfortCount, post.comfortPhraseCounts);
             updateComfortCount(node, post);
             showFeedNotice(savedComfort.message);
             return;
@@ -443,7 +529,8 @@ async function renderFeed(options = {}) {
           comfortButton.disabled = true;
           comfortButton.classList.add("sent");
           post.comfortCount = savedComfort.comfortCount;
-          updateCachedComfortCount(post.id, post.comfortCount);
+          post.comfortPhraseCounts = savedComfort.comfortPhraseCounts;
+          updateCachedComfortCount(post.id, post.comfortCount, post.comfortPhraseCounts);
           updateComfortCount(node, post);
         } catch (error) {
           showFeedNotice(error.message);
@@ -455,44 +542,76 @@ async function renderFeed(options = {}) {
     feedList.append(node);
     visiblePostElements.push(node);
   });
+
+  updateLoadMoreButton();
 }
 
 function updateComfortCount(node, post) {
   node.querySelector(".comfort-count").textContent = `${post.comfortCount} comfort${post.comfortCount === 1 ? "" : "s"}`;
+  const phraseCounts = node.querySelector(".phrase-counts");
+  phraseCounts.innerHTML = "";
+
+  comfortPhrases.forEach((phrase) => {
+    const count = Number(post.comfortPhraseCounts?.[phrase]) || 0;
+    if (!count) {
+      return;
+    }
+
+    const item = document.createElement("span");
+    item.textContent = `${count} ${phrase}`;
+    phraseCounts.append(item);
+  });
 }
 
-function updateCachedComfortCount(postId, comfortCount) {
+function updateCachedComfortCount(postId, comfortCount, comfortPhraseCounts) {
   if (!sharedPostsCache) {
     return;
   }
 
   sharedPostsCache = sharedPostsCache.map((post) => (
-    post.id === postId ? { ...post, comfortCount } : post
+    post.id === postId ? { ...post, comfortCount, comfortPhraseCounts } : post
   ));
 }
 
-function jumpToRandomFeeling() {
-  if (!visiblePostElements.length) {
-    showFeedError("No visible feelings are available for this filter yet.");
-    return;
+function updateLoadMoreButton() {
+  loadMoreButton.hidden = !feedHasMore;
+  loadMoreButton.disabled = false;
+}
+
+async function showRandomFeeling() {
+  try {
+    const post = await quietStore.getRandomPost();
+    if (!post) {
+      showFeedNotice("No public feelings are available yet.");
+      return;
+    }
+
+    randomSpotlight.hidden = false;
+    randomSpotlight.className = `random-spotlight mood-${post.mood}`;
+    randomSpotlight.innerHTML = "";
+
+    const label = document.createElement("strong");
+    const dot = document.createElement("span");
+    const text = document.createElement("p");
+    dot.className = "mood-dot";
+    label.append(dot, `Random Feeling - ${moodLabels[post.mood]}`);
+    text.textContent = post.text;
+    randomSpotlight.append(label, text);
+    randomSpotlight.scrollIntoView({
+      behavior: window.matchMedia("(max-width: 768px)").matches ? "auto" : "smooth",
+      block: "nearest"
+    });
+  } catch (error) {
+    showFeedNotice(error.message);
   }
-
-  visiblePostElements.forEach((node) => node.classList.remove("is-random-target"));
-  const target = visiblePostElements[Math.floor(Math.random() * visiblePostElements.length)];
-  const scrollBehavior = window.matchMedia("(max-width: 768px)").matches ? "auto" : "smooth";
-  target.classList.add("is-random-target");
-  target.scrollIntoView({ behavior: scrollBehavior, block: "center" });
-
-  window.setTimeout(() => {
-    target.classList.remove("is-random-target");
-  }, 2600);
 }
 
 async function renderArchive() {
   let posts;
 
   try {
-    posts = await quietStore.listSharedPosts();
+    const post = await quietStore.getRandomPost();
+    posts = post ? [post] : [];
   } catch (error) {
     archiveCard.className = "archive-card";
     archiveCard.innerHTML = "";
@@ -721,8 +840,9 @@ form.addEventListener("submit", async (event) => {
   if (action === "share") {
     try {
       await quietStore.addSharedPost(post);
-      await renderFeed();
+      await renderFeed({ reset: true });
       await renderArchive();
+      await renderStats();
     } catch (error) {
       messageWell.innerHTML = `<p>${error.message}</p>`;
       return;
@@ -743,10 +863,14 @@ clearButton.addEventListener("click", () => {
 });
 
 document.querySelectorAll("input[name='filter']").forEach((input) => {
-  input.addEventListener("change", () => renderFeed());
+  input.addEventListener("change", () => renderFeed({ reset: true }));
 });
 
-randomFeelingButton.addEventListener("click", jumpToRandomFeeling);
+randomFeelingButton.addEventListener("click", showRandomFeeling);
+loadMoreButton.addEventListener("click", async () => {
+  loadMoreButton.disabled = true;
+  await renderFeed({ reset: false });
+});
 shuffleArchive.addEventListener("click", renderArchive);
 
 letterForm.addEventListener("submit", async (event) => {
@@ -805,7 +929,8 @@ window.setInterval(() => {
   }
 }, 12000);
 updateCount();
-renderFeed();
+renderStats();
+renderFeed({ reset: true });
 renderArchive();
 renderLetters();
 renderCapsules();
