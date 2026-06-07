@@ -43,6 +43,8 @@ const writingPrompts = [
 ];
 let currentPromptIndex = -1;
 let visiblePostElements = [];
+let sharedPostsCache = null;
+let sharedPostsRequest = null;
 
 const supabaseConfig = window.LEAVE_IT_HERE_SUPABASE || {};
 const isSupabaseConfigured = Boolean(
@@ -60,23 +62,41 @@ let lastShareAt = 0;
 
 // Public shared posts use Supabase when configured. Private releases stay local only.
 const quietStore = {
-  async listSharedPosts() {
+  async listSharedPosts(options = {}) {
     requireSupabase();
 
-    const { data, error } = await supabaseClient
-      .from("feelings")
-      .select("id,text,mood,created_at,reported_count,comfort_count")
-      .eq("approved", true)
-      .eq("hidden", false)
-      .order("created_at", { ascending: false })
-      .limit(60);
-
-    if (error) {
-      console.error("Could not load shared feelings", error);
-      throw new Error("Supabase read failed. Shared feelings are not connected yet.");
+    const force = Boolean(options.force);
+    if (!force && sharedPostsCache) {
+      return sharedPostsCache;
     }
 
-    return data.map(formatRemotePost);
+    if (!force && sharedPostsRequest) {
+      return sharedPostsRequest;
+    }
+
+    sharedPostsRequest = (async () => {
+      try {
+        const { data, error } = await supabaseClient
+          .from("feelings")
+          .select("id,text,mood,created_at,reported_count,comfort_count")
+          .eq("approved", true)
+          .eq("hidden", false)
+          .order("created_at", { ascending: false })
+          .limit(40);
+
+        if (error) {
+          console.error("Could not load shared feelings", error);
+          throw new Error("Supabase read failed. Shared feelings are not connected yet.");
+        }
+
+        sharedPostsCache = data.map(formatRemotePost);
+        return sharedPostsCache;
+      } finally {
+        sharedPostsRequest = null;
+      }
+    })();
+
+    return sharedPostsRequest;
   },
 
   async addSharedPost(post) {
@@ -97,7 +117,11 @@ const quietStore = {
     }
 
     lastShareAt = Date.now();
-    return formatRemotePost(Array.isArray(data) ? data[0] : data);
+    const savedPost = formatRemotePost(Array.isArray(data) ? data[0] : data);
+    if (sharedPostsCache) {
+      sharedPostsCache = [savedPost, ...sharedPostsCache].slice(0, 40);
+    }
+    return savedPost;
   },
 
   async addPrivateRelease(release) {
@@ -121,6 +145,8 @@ const quietStore = {
     if (error) {
       throw new Error(error.message || "Supabase report failed.");
     }
+
+    sharedPostsCache = null;
   },
 
   async listComfortEvents() {
@@ -282,14 +308,14 @@ function showReleaseMessage(text, mode) {
   }, 2300);
 }
 
-async function renderFeed() {
+async function renderFeed(options = {}) {
   let posts;
   let reportedIds;
   let comfortEvents;
 
   try {
     [posts, reportedIds, comfortEvents] = await Promise.all([
-      quietStore.listSharedPosts(),
+      quietStore.listSharedPosts(options),
       quietStore.listReportedPostIds(),
       quietStore.listComfortEvents()
     ]);
@@ -327,7 +353,7 @@ async function renderFeed() {
     node.querySelector("p").textContent = isReported
       ? "This post has been reported on this device."
       : post.text;
-    node.querySelector(".comfort-count").textContent = `${post.comfortCount} comfort${post.comfortCount === 1 ? "" : "s"}`;
+    updateComfortCount(node, post);
 
     const reportButton = node.querySelector(".report-button");
     reportButton.textContent = isReported ? "Reported" : "Report";
@@ -337,7 +363,7 @@ async function renderFeed() {
         await quietStore.reportPost(post.id);
         reportButton.textContent = "Reported";
         reportButton.disabled = true;
-        await renderFeed();
+        await renderFeed({ force: true });
       } catch (error) {
         showFeedError(error.message);
       }
@@ -372,7 +398,9 @@ async function renderFeed() {
           comfortButton.textContent = "Comfort sent";
           comfortButton.disabled = true;
           comfortButton.classList.add("sent");
-          await renderFeed();
+          post.comfortCount += 1;
+          updateCachedComfortCount(post.id, post.comfortCount);
+          updateComfortCount(node, post);
         } catch (error) {
           showFeedError(error.message);
         }
@@ -385,6 +413,20 @@ async function renderFeed() {
   });
 }
 
+function updateComfortCount(node, post) {
+  node.querySelector(".comfort-count").textContent = `${post.comfortCount} comfort${post.comfortCount === 1 ? "" : "s"}`;
+}
+
+function updateCachedComfortCount(postId, comfortCount) {
+  if (!sharedPostsCache) {
+    return;
+  }
+
+  sharedPostsCache = sharedPostsCache.map((post) => (
+    post.id === postId ? { ...post, comfortCount } : post
+  ));
+}
+
 function jumpToRandomFeeling() {
   if (!visiblePostElements.length) {
     showFeedError("No visible feelings are available for this filter yet.");
@@ -393,8 +435,9 @@ function jumpToRandomFeeling() {
 
   visiblePostElements.forEach((node) => node.classList.remove("is-random-target"));
   const target = visiblePostElements[Math.floor(Math.random() * visiblePostElements.length)];
+  const scrollBehavior = window.matchMedia("(max-width: 768px)").matches ? "auto" : "smooth";
   target.classList.add("is-random-target");
-  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  target.scrollIntoView({ behavior: scrollBehavior, block: "center" });
 
   window.setTimeout(() => {
     target.classList.remove("is-random-target");
@@ -614,10 +657,10 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-    const mood = selectedMood();
-    const post = createPost(text, mood);
+  const mood = selectedMood();
+  const post = createPost(text, mood);
 
-    if (action === "share") {
+  if (action === "share") {
     try {
       await quietStore.addSharedPost(post);
       await renderFeed();
@@ -642,7 +685,7 @@ clearButton.addEventListener("click", () => {
 });
 
 document.querySelectorAll("input[name='filter']").forEach((input) => {
-  input.addEventListener("change", renderFeed);
+  input.addEventListener("change", () => renderFeed());
 });
 
 randomFeelingButton.addEventListener("click", jumpToRandomFeeling);
@@ -698,7 +741,11 @@ textarea.addEventListener("input", updateCount);
 textarea.addEventListener("focus", rotatePromptIfEmpty);
 
 setRandomPrompt();
-window.setInterval(rotatePromptIfEmpty, 8000);
+window.setInterval(() => {
+  if (!document.hidden) {
+    rotatePromptIfEmpty();
+  }
+}, 12000);
 updateCount();
 renderFeed();
 renderArchive();
