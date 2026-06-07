@@ -21,6 +21,52 @@ create table if not exists public.feeling_actions (
   created_at timestamptz not null default now()
 );
 
+delete from public.feeling_actions
+where public.feeling_actions.id in (
+  select duplicate_actions.id
+  from (
+    select
+      public.feeling_actions.id,
+      row_number() over (
+        partition by public.feeling_actions.feeling_id, public.feeling_actions.client_token_hash
+        order by public.feeling_actions.created_at, public.feeling_actions.id
+      ) as duplicate_number
+    from public.feeling_actions
+    where public.feeling_actions.action_type = 'report'
+  ) as duplicate_actions
+  where duplicate_actions.duplicate_number > 1
+);
+
+delete from public.feeling_actions
+where public.feeling_actions.id in (
+  select duplicate_actions.id
+  from (
+    select
+      public.feeling_actions.id,
+      row_number() over (
+        partition by public.feeling_actions.feeling_id, public.feeling_actions.client_token_hash, public.feeling_actions.comfort_phrase
+        order by public.feeling_actions.created_at, public.feeling_actions.id
+      ) as duplicate_number
+    from public.feeling_actions
+    where public.feeling_actions.action_type = 'comfort'
+  ) as duplicate_actions
+  where duplicate_actions.duplicate_number > 1
+);
+
+update public.feelings
+set comfort_count = coalesce(comfort_totals.total, 0)
+from (
+  select
+    public.feelings.id as feeling_id,
+    count(public.feeling_actions.id)::integer as total
+  from public.feelings
+  left join public.feeling_actions
+    on public.feeling_actions.feeling_id = public.feelings.id
+    and public.feeling_actions.action_type = 'comfort'
+  group by public.feelings.id
+) as comfort_totals
+where public.feelings.id = comfort_totals.feeling_id;
+
 create unique index if not exists one_report_per_client_per_feeling
 on public.feeling_actions (feeling_id, client_token_hash)
 where action_type = 'report';
@@ -146,13 +192,15 @@ create or replace function public.send_comfort(
   selected_comfort_phrase text,
   target_feeling_id uuid
 )
-returns void
+returns table(saved boolean, message text, comfort_count integer)
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
   token_hash text := public.hash_client_token(client_token);
+  saved_feeling_id uuid;
+  new_count integer := 0;
 begin
   if selected_comfort_phrase not in ('You''re not alone.', 'I hear you.', 'That sounds heavy.') then
     raise exception 'Please choose one of the available comfort messages.';
@@ -168,10 +216,56 @@ begin
     on conflict do nothing
     returning public.feeling_actions.feeling_id
   )
+  select inserted.feeling_id
+  into saved_feeling_id
+  from inserted;
+
+  if saved_feeling_id is null then
+    select public.feelings.comfort_count
+    into new_count
+    from public.feelings
+    where public.feelings.id = target_feeling_id;
+
+    return query select false, 'You already sent comfort here.'::text, coalesce(new_count, 0);
+    return;
+  end if;
+
   update public.feelings
   set comfort_count = public.feelings.comfort_count + 1
   where public.feelings.id = target_feeling_id
-    and exists (select 1 from inserted);
+  returning public.feelings.comfort_count into new_count;
+
+  return query select true, 'Comfort sent.'::text, coalesce(new_count, 0);
+end;
+$$;
+
+drop function if exists public.list_my_comforts(text);
+
+create or replace function public.list_my_comforts(
+  client_token text
+)
+returns table(feeling_id uuid, comfort_phrase text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  token_hash text := public.hash_client_token(client_token);
+begin
+  if client_token is null or char_length(client_token) < 12 then
+    return;
+  end if;
+
+  return query
+  select public.feeling_actions.feeling_id, public.feeling_actions.comfort_phrase
+  from public.feeling_actions
+  join public.feelings
+    on public.feelings.id = public.feeling_actions.feeling_id
+  where public.feeling_actions.client_token_hash = token_hash
+    and public.feeling_actions.action_type = 'comfort'
+    and public.feeling_actions.comfort_phrase is not null
+    and public.feelings.approved = true
+    and public.feelings.hidden = false;
 end;
 $$;
 
@@ -181,3 +275,4 @@ grant select on public.feelings to anon;
 grant execute on function public.submit_feeling(text, text, text) to anon;
 grant execute on function public.report_feeling(uuid, text) to anon;
 grant execute on function public.send_comfort(text, text, uuid) to anon;
+grant execute on function public.list_my_comforts(text) to anon;

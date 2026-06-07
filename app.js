@@ -18,7 +18,8 @@ const privateItemTemplate = document.querySelector("#privateItemTemplate");
 const storageKeys = {
   privateReleases: "open-quiet-private-releases",
   letters: "open-quiet-unsent-letters",
-  capsules: "open-quiet-time-capsules"
+  capsules: "open-quiet-time-capsules",
+  browserToken: "leave-it-here-browser-token"
 };
 
 const moodLabels = {
@@ -57,7 +58,7 @@ const isSupabaseConfigured = Boolean(
 const supabaseClient = isSupabaseConfigured
   ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
   : null;
-const sessionClientToken = crypto.randomUUID ? crypto.randomUUID() : `client-${Date.now()}-${Math.random()}`;
+const sessionClientToken = getBrowserToken();
 let lastShareAt = 0;
 
 // Public shared posts use Supabase when configured. Private releases stay local only.
@@ -150,13 +151,27 @@ const quietStore = {
   },
 
   async listComfortEvents() {
-    return [];
+    requireSupabase();
+
+    const { data, error } = await supabaseClient.rpc("list_my_comforts", {
+      client_token: sessionClientToken
+    });
+
+    if (error) {
+      console.warn("Could not load comfort history", error);
+      return [];
+    }
+
+    return (data || []).map((event) => ({
+      postId: event.feeling_id,
+      phrase: event.comfort_phrase
+    }));
   },
 
   async addComfortEvent(event) {
     requireSupabase();
 
-    const { error } = await supabaseClient.rpc("send_comfort", {
+    const { data, error } = await supabaseClient.rpc("send_comfort", {
       target_feeling_id: event.postId,
       selected_comfort_phrase: event.phrase,
       client_token: sessionClientToken
@@ -165,6 +180,13 @@ const quietStore = {
     if (error) {
       throw new Error(error.message || "Supabase comfort failed.");
     }
+
+    const result = Array.isArray(data) ? data[0] : data;
+    return {
+      saved: Boolean(result?.saved),
+      message: result?.message || "You already sent comfort here.",
+      comfortCount: Number(result?.comfort_count) || 0
+    };
   },
 
   async listLetters() {
@@ -197,6 +219,17 @@ function readJson(key, fallback) {
 
 function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getBrowserToken() {
+  const existingToken = localStorage.getItem(storageKeys.browserToken);
+  if (existingToken && existingToken.length >= 12) {
+    return existingToken;
+  }
+
+  const newToken = crypto.randomUUID ? crypto.randomUUID() : `client-${Date.now()}-${Math.random()}`;
+  localStorage.setItem(storageKeys.browserToken, newToken);
+  return newToken;
 }
 
 function requireSupabase() {
@@ -389,20 +422,31 @@ async function renderFeed(options = {}) {
       }
       comfortButton.addEventListener("click", async () => {
         try {
-          await quietStore.addComfortEvent({
+          const savedComfort = await quietStore.addComfortEvent({
             id: `comfort-${Date.now()}-${Math.random().toString(16).slice(2)}`,
             postId: post.id,
             phrase,
             createdAt: new Date().toISOString()
           });
+          if (!savedComfort.saved) {
+            comfortButton.textContent = "Comfort sent";
+            comfortButton.disabled = true;
+            comfortButton.classList.add("sent");
+            post.comfortCount = savedComfort.comfortCount || post.comfortCount;
+            updateCachedComfortCount(post.id, post.comfortCount);
+            updateComfortCount(node, post);
+            showFeedNotice(savedComfort.message);
+            return;
+          }
+
           comfortButton.textContent = "Comfort sent";
           comfortButton.disabled = true;
           comfortButton.classList.add("sent");
-          post.comfortCount += 1;
+          post.comfortCount = savedComfort.comfortCount;
           updateCachedComfortCount(post.id, post.comfortCount);
           updateComfortCount(node, post);
         } catch (error) {
-          showFeedError(error.message);
+          showFeedNotice(error.message);
         }
       });
       comfortRow.append(comfortButton);
@@ -482,6 +526,20 @@ function showFeedError(message) {
   error.className = "empty-state error-state";
   error.textContent = message;
   feedList.append(error);
+}
+
+function showFeedNotice(message) {
+  const oldNotice = feedList.querySelector(".feed-notice");
+  oldNotice?.remove();
+
+  const notice = document.createElement("p");
+  notice.className = "feed-notice";
+  notice.textContent = message;
+  feedList.prepend(notice);
+
+  window.setTimeout(() => {
+    notice.remove();
+  }, 3200);
 }
 
 function createErrorText(message) {
