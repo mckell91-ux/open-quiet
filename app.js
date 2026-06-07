@@ -91,8 +91,11 @@ const quietStore = {
         });
 
         if (error) {
-          console.error("Could not load shared feelings", error);
-          throw new Error("Supabase read failed. Shared feelings are not connected yet.");
+          console.warn("Public feelings RPC failed; falling back to direct feelings query.", error);
+          const fallbackPosts = await listSharedPostsDirect({ filter, offset });
+          sharedPostsCache = reset ? fallbackPosts : [...sharedPostsCache, ...fallbackPosts];
+          feedHasMore = fallbackPosts.length === pageSize;
+          return sharedPostsCache;
         }
 
         const posts = (data || []).map(formatRemotePost);
@@ -218,7 +221,8 @@ const quietStore = {
     const { data, error } = await supabaseClient.rpc("get_public_stats");
 
     if (error) {
-      throw new Error("Stats are unavailable right now.");
+      console.warn("Stats RPC failed; hiding homepage stats.", error);
+      return null;
     }
 
     return Array.isArray(data) ? data[0] : data;
@@ -230,7 +234,8 @@ const quietStore = {
     const { data, error } = await supabaseClient.rpc("random_public_feeling");
 
     if (error) {
-      throw new Error("Could not load a random feeling right now.");
+      console.warn("Random feeling RPC failed; falling back to direct feelings query.", error);
+      return getRandomPostDirect();
     }
 
     const post = Array.isArray(data) ? data[0] : data;
@@ -284,6 +289,48 @@ function requireSupabase() {
   if (!supabaseClient) {
     throw new Error("Supabase is not connected. Check supabase-config.js and run the Supabase SQL setup.");
   }
+}
+
+async function listSharedPostsDirect({ filter, offset }) {
+  let query = supabaseClient
+    .from("feelings")
+    .select("id,text,mood,created_at,reported_count,comfort_count")
+    .eq("approved", true)
+    .eq("hidden", false)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + pageSize - 1);
+
+  if (filter && filter !== "all") {
+    query = query.eq("mood", filter);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Could not load shared feelings", error);
+    throw new Error("Supabase read failed. Shared feelings are not connected yet.");
+  }
+
+  return (data || []).map(formatRemotePost);
+}
+
+async function getRandomPostDirect() {
+  const { data, error } = await supabaseClient
+    .from("feelings")
+    .select("id,text,mood,created_at,reported_count,comfort_count")
+    .eq("approved", true)
+    .eq("hidden", false)
+    .limit(40);
+
+  if (error) {
+    throw new Error("Could not load a random feeling right now.");
+  }
+
+  if (!data?.length) {
+    return null;
+  }
+
+  return formatRemotePost(data[Math.floor(Math.random() * data.length)]);
 }
 
 function formatRemotePost(post) {
